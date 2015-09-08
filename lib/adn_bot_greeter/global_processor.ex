@@ -23,10 +23,14 @@ defmodule AdnBotGreeter.GlobalProcessor do
     username = decoded["data"]["user"]["username"]
     {:ok, nice} = Nice.user(username)
 
-    if nice do
-      Logger.info "Post from #{username}, NR #{nice["rank"]}"
+    case nice do
+      %{"rank" => rank} when rank >= 1.7 and rank <= 2.0 ->
+        Logger.info "=> #{username} NR #{rank} (Bot or not?)"
+      %{"rank" => rank} ->
+        Logger.info "=> #{username} NR #{rank}"
+      nil ->
+        Logger.info "=> #{username} NR 0.0"
     end
-
     {:noreply, state}
   end
 end

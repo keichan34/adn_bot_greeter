@@ -11,6 +11,10 @@ defmodule AdnBotGreeter.Nice do
     GenServer.call(__MODULE__, {:query_user, name})
   end
 
+  def reload_data do
+    GenServer.call(__MODULE__, :reload_data, 35000)
+  end
+
   def init(_) do
     Kernel.send self, :trigger_reload
     {:ok, %{users: nil}}
@@ -43,6 +47,11 @@ defmodule AdnBotGreeter.Nice do
     Logger.info "[Nice] Loaded."
 
     {:noreply, state}
+  end
+
+  def handle_call(:reload_data, _from, state) do
+    {:noreply, state} = handle_info(:trigger_reload, state)
+    {:reply, :ok, state}
   end
 
   def handle_call({:query_user, _}, _from, %{users: nil} = state),
