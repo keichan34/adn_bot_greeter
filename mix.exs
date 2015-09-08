@@ -18,6 +18,7 @@ defmodule AdnBotGreeter.Mixfile do
       applications: [
         :logger,
         :httpoison,
+        :crypto
       ],
       included_applications: [
         :poison,

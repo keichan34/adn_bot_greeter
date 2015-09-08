@@ -2,7 +2,6 @@ defmodule AdnBotGreeter.GlobalStream do
   use GenServer
 
   alias AdnBotGreeter.AuthorizationWorker
-  alias AdnBotGreeter.GlobalStreamHandler
 
   require Logger
 
@@ -65,6 +64,7 @@ defmodule AdnBotGreeter.GlobalStream do
   end
 
   def terminate(_reason, _state) do
+    Logger.fatal "[Stream] Tearing down..."
     HTTPoison.delete!(
       "https://api.app.net/streams",
       [

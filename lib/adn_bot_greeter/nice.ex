@@ -47,6 +47,9 @@ defmodule AdnBotGreeter.Nice do
       end)
 
       load_data(users)
+
+      int = 360_000 + :crypto.rand_uniform(-50, 50) * 10
+      Process.send_after __MODULE__, :trigger_reload, int
     end)
 
     {:noreply, state}
@@ -94,7 +97,7 @@ defmodule AdnBotGreeter.Nice do
     decoded = Poison.Parser.parse!(body)
     data = decoded["data"]
 
-    if length(data) >= 1 do
+    if is_list(data) and length(data) >= 1 do
       datum = List.first(data)
       user = Map.drop(datum, ~w(user_id))
       users = state[:users]
