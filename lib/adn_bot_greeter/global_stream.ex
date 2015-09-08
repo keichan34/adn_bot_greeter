@@ -2,10 +2,9 @@ defmodule AdnBotGreeter.GlobalStream do
   use GenServer
 
   alias AdnBotGreeter.AuthorizationWorker
+  alias AdnBotGreeter.GlobalStreamHandler
 
   require Logger
-
-  import AdnBotGreeter.GlobalProcessor, only: [process_message: 1]
 
   @stream_key "adnbotgreeter-stream"
 
@@ -13,9 +12,22 @@ defmodule AdnBotGreeter.GlobalStream do
     GenServer.start_link(__MODULE__, %{}, name: __MODULE__)
   end
 
+  def stream_endpoint do
+    GenServer.call(__MODULE__, :stream_endpoint)
+  end
+
   def init(_) do
     Kernel.send self, :initialize
-    {:ok, %{stream: nil, stream_ref: nil, buffer: ""}}
+    {:ok, %{stream: nil}}
+  end
+
+  def handle_call(:stream_endpoint, _from, state) do
+    out = if state[:stream] do
+      {:ok, state[:stream]["endpoint"]}
+    else
+      {:error, :not_loaded}
+    end
+    {:reply, out, state}
   end
 
   def handle_info(:initialize, state) do
@@ -49,45 +61,7 @@ defmodule AdnBotGreeter.GlobalStream do
       state = %{state | stream: decoded["data"]}
     end
 
-    state = start_stream(state)
-
     {:noreply, state}
-  end
-
-  def handle_info(%HTTPoison.AsyncStatus{code: 200}, state) do
-    Logger.info "[Stream] Started."
-    {:noreply, state}
-  end
-
-  def handle_info(%HTTPoison.AsyncStatus{code: error}, state) do
-    # Ignore an error.
-    Logger.info "[Stream] Stream failed with error: #{error}"
-    {:stop, :normal, state}
-  end
-
-  # Ignore headers.
-  def handle_info(%HTTPoison.AsyncHeaders{headers: _}, state) do
-    {:noreply, state}
-  end
-
-  def handle_info(%HTTPoison.AsyncChunk{chunk: data}, state) do
-    buffer = state[:buffer] <> data
-    chunks = String.split(buffer, "\r\n")
-    buffer = List.last(chunks) || ""
-    chunks = List.delete_at(chunks, -1)
-    Enum.each(chunks, &process_message(&1))
-
-    {:noreply, %{state | buffer: buffer}}
-  end
-
-  def handle_info(%HTTPoison.AsyncEnd{}, state) do
-    IO.puts "[Stream] Disconnected by server."
-    {:stop, :normal, state}
-  end
-
-  def handle_info(%HTTPoison.Error{reason: reason}, state) do
-    IO.puts "[Stream] Connection failed: #{inspect reason}"
-    {:stop, :normal, state}
   end
 
   def terminate(_reason, _state) do
@@ -98,17 +72,5 @@ defmodule AdnBotGreeter.GlobalStream do
         {"Authorization", "Bearer #{AuthorizationWorker.token}"}
       ])
     :ok
-  end
-
-  defp start_stream(state) do
-    {:ok, %HTTPoison.AsyncResponse{id: ref}} =
-      HTTPoison.get(
-        state[:stream]["endpoint"],
-        [
-          {"User-Agent", "adnbotgreeter-0"}
-        ],
-        stream_to: self)
-
-    %{state | stream_ref: ref}
   end
 end

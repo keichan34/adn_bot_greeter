@@ -4,6 +4,7 @@ defmodule AdnBotGreeter.Supervisor do
   alias AdnBotGreeter.Nice
   alias AdnBotGreeter.AuthorizationWorker
   alias AdnBotGreeter.GlobalStream
+  alias AdnBotGreeter.GlobalStreamHandler
   alias AdnBotGreeter.GlobalProcessor
 
   def start_link do
@@ -15,7 +16,8 @@ defmodule AdnBotGreeter.Supervisor do
       worker(AuthorizationWorker, []),
       worker(Nice, []),
       worker(GlobalStream, []),
-      worker(GlobalProcessor, [])
+      worker(GlobalStreamHandler, []),
+      worker(GlobalProcessor, []),
     ]
 
     supervise(children, strategy: :one_for_one)
