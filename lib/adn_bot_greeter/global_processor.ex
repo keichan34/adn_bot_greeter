@@ -21,15 +21,17 @@ defmodule AdnBotGreeter.GlobalProcessor do
     decoded = Poison.Parser.parse!(message)
 
     username = decoded["data"]["user"]["username"]
-    {:ok, nice} = Nice.user(username)
+    user_id = decoded["data"]["user"]["id"]
 
-    case nice do
-      %{"rank" => rank} when rank >= 1.7 and rank <= 2.0 ->
+    case Nice.user(user_id) do
+      {:ok, %{"rank" => rank}} when rank >= 1.7 and rank <= 2.0 ->
         Logger.info "=> #{username} NR #{rank} (Bot or not?)"
-      %{"rank" => rank} ->
+      {:ok, %{"rank" => rank}} ->
         Logger.info "=> #{username} NR #{rank}"
-      nil ->
+      {:ok, nil} ->
         Logger.info "=> #{username} NR 0.0"
+      {:error, _} ->
+        Logger.info "=> #{username} NR ???"
     end
     {:noreply, state}
   end
