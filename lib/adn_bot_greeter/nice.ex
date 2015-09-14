@@ -48,7 +48,8 @@ defmodule AdnBotGreeter.Nice do
 
       load_data(users)
 
-      int = 360_000 + :crypto.rand_uniform(-50, 50) * 10
+      # 30 minutes.
+      int = 1_800_000 + (:crypto.rand_uniform(-50, 50) * 10)
       Process.send_after __MODULE__, :trigger_reload, int
     end)
 

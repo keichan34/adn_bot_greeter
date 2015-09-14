@@ -7,6 +7,7 @@ defmodule AdnBotGreeter.Mixfile do
      elixir: "~> 1.0",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     escript: escript_config,
      deps: deps]
   end
 
@@ -41,6 +42,13 @@ defmodule AdnBotGreeter.Mixfile do
       {:httpoison, ">= 0.7.3"},
       {:poison, "~> 1.5"},
       {:timex, "~> 0.19"}
+    ]
+  end
+
+  defp escript_config do
+    [
+      main_module: AdnBotGreeter.CLI,
+      name: "abg"
     ]
   end
 end
